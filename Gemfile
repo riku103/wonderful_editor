@@ -27,6 +27,9 @@ gem "active_model_serializers"
 gem "devise"
 gem "devise_token_auth"
 
+# CORS設定
+gem "rack-cors"
+
 # Use Active Storage variant
 # gem 'image_processing', '~> 1.2'
 
