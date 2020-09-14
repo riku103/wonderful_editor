@@ -8,3 +8,8 @@ inherit_from:
 
 AllCops:
   TargetRubyVersion: 2.6
+
+Metrics/AbcSize:
+  # The ABC size is a calculated magnitude, so this number can be a Fixnum or
+  # a Float.
+  Max: 30
