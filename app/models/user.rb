@@ -12,5 +12,5 @@ class User < ApplicationRecord
   has_many :comments, dependent: :destroy
   has_many :article_likes, dependent: :destroy
 
-  validates :name, presence: true, uniqueness: true
+  validates :name, presence: true
 end
