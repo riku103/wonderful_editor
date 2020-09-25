@@ -29,8 +29,8 @@ RSpec.describe "Api::V1::Articles", type: :request do
     subject { get(api_v1_article_path(article_id)) }
 
     context "指定したidの記事が存在する時" do
-      let!(:article) { create(:article) }
-      let!(:article_id) { article.id }
+      let(:article) { create(:article) }
+      let(:article_id) { article.id }
       it "その記事の詳細が取得できる" do
         subject
 
