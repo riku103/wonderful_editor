@@ -1,6 +1,7 @@
 FactoryBot.define do
   factory :article do
-    title { "MyString" }
-    body { "これはテスト用のダミーテキストです。" }
+    title { Faker::Lorem.word }
+    body { Faker::Lorem.sentence }
+    user
   end
 end

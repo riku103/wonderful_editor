@@ -17,7 +17,7 @@ gem "webpacker", "~> 4.0"
 gem "turbolinks", "~> 5"
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 # gem 'jbuilder', '~> 2.7'
-gem "active_model_serializers"
+gem "active_model_serializers", "~> 0.10.0"
 # Use Redis adapter to run Action Cable in production
 # gem 'redis', '~> 4.0'
 # Use Active Model has_secure_password
@@ -63,7 +63,7 @@ group :development do
 
   gem "annotate"
 
-  gem "rails-erd"
+  # gem "rails-erd"
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
