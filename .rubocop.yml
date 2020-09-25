@@ -13,3 +13,10 @@ Metrics/AbcSize:
   # The ABC size is a calculated magnitude, so this number can be a Fixnum or
   # a Float.
   Max: 30
+
+RSpec/MultipleExpectations:
+  Max: 5
+
+# RSpec/EmptyExampleGroup:
+#   CustomIncludeMethods:
+#     include_tests

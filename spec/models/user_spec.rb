@@ -13,31 +13,25 @@ RSpec.describe User, type: :model do
   context "名前のみ入力している場合" do
     let(:user) { build(:user, email: nil, password: nil) }
     it "エラーが発生する" do
-      aggregate_failures "最後まで通過"  do
-        expect(user).not_to be_valid
-        expect(user.errors.details[:password][0][:error]).to eq :blank
-        expect(user.errors.details[:email][0][:error]).to eq :blank
-      end
+      expect(user).not_to be_valid
+      expect(user.errors.details[:password][0][:error]).to eq :blank
+      expect(user.errors.details[:email][0][:error]).to eq :blank
     end
   end
 
   context "email がない場合" do
     let(:user) { build(:user, email: nil) }
     it "エラーが発生する" do
-      aggregate_failures "最後まで通過" do
-        expect(user).not_to be_valid
-        expect(user.errors.details[:email][0][:error]).to eq :blank
-      end
+      expect(user).not_to be_valid
+      expect(user.errors.details[:email][0][:error]).to eq :blank
     end
   end
 
   context "password がない場合" do
     let(:user) { build(:user, password: nil) }
     it "エラーが発生する" do
-      aggregate_failures "最後まで通過" do
-        expect(user).not_to be_valid
-        expect(user.errors.details[:password][0][:error]).to eq :blank
-      end
+      expect(user).not_to be_valid
+      expect(user.errors.details[:password][0][:error]).to eq :blank
     end
   end
 
