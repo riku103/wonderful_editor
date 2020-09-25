@@ -15,8 +15,11 @@ Metrics/AbcSize:
   Max: 30
 
 RSpec/MultipleExpectations:
-  Max: 5
+  Max: 10
 
 # RSpec/EmptyExampleGroup:
 #   CustomIncludeMethods:
 #     include_tests
+
+RSpec/ExampleLength:
+  Enabled: false
