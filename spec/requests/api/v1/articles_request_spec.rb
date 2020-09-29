@@ -19,7 +19,7 @@ RSpec.describe "Api::V1::Articles", type: :request do
       # ③記事が更新順に取得できること
       expect(res.map {|d| d["id"] }).to eq [article3.id, article1.id, article2.id]
       # ④ステータスコードが200であること
-      expect(response).to have_http_status(:success)
+      expect(response).to have_http_status(:ok)
       # ⑤誰が書いた記事が取得できるか
       expect(res[0]["user"].keys).to eq ["id", "name", "email"]
     end
@@ -36,7 +36,7 @@ RSpec.describe "Api::V1::Articles", type: :request do
 
         res = JSON.parse(response.body)
 
-        expect(response).to have_http_status(:success)
+        expect(response).to have_http_status(:ok)
         expect(res["id"]).to eq article.id
         expect(res["title"]).to eq article.title
         expect(res["body"]).to eq article.body
@@ -50,6 +50,37 @@ RSpec.describe "Api::V1::Articles", type: :request do
       let(:article_id) { 100000 }
       it "記事が見つからない" do
         expect { subject }.to raise_error(ActiveRecord::RecordNotFound)
+      end
+    end
+  end
+
+  describe "POST /articles" do
+    subject { post(api_v1_articles_path, params: params) }
+
+    # スタブを定義する
+    before { allow_any_instance_of(Api::V1::BaseApiController).to receive(:current_user).and_return(create(:user)) }
+
+    context "適切なパラメーターを送信した時" do
+      let(:params) do
+        { article: attributes_for(:article) }
+      end
+
+      it "記事を作成できる" do
+        # ①レコードが一つ作成できること
+        expect { subject }.to change { Article.count }.by(1)
+        # ②送ったパラメーターを元にレコードが作成されていること
+        res = JSON.parse(response.body)
+        expect(res["title"]).to eq params[:article][:title]
+        expect(res["body"]).to eq params[:article][:body]
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context "不適切なパラメーターを送信した時" do
+      let(:params) { attributes_for(:article) }
+
+      it "エラーする" do
+        expect { subject }.to raise_error(ActionController::ParameterMissing)
       end
     end
   end
