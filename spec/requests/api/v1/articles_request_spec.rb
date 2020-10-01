@@ -57,8 +57,10 @@ RSpec.describe "Api::V1::Articles", type: :request do
   describe "POST /articles" do
     subject { post(api_v1_articles_path, params: params) }
 
+    let(:base_api_controller) { instance_double(Api::V1::BaseApiController) }
+
     # スタブを定義する
-    before { allow_any_instance_of(Api::V1::BaseApiController).to receive(:current_user).and_return(create(:user)) }
+    before { allow(base_api_controller).to receive(:current_user).and_return(create(:user)) }
 
     context "適切なパラメーターを送信した時" do
       let(:params) do
@@ -81,6 +83,41 @@ RSpec.describe "Api::V1::Articles", type: :request do
 
       it "エラーする" do
         expect { subject }.to raise_error(ActionController::ParameterMissing)
+      end
+    end
+  end
+
+  describe "PUT /articles/:id" do
+    subject { put(api_v1_article_path(article.id), params: params) }
+
+    let(:params) do
+      { article: attributes_for(:article) }
+    end
+    let(:current_user) { create(:user) }
+    # let(:base_api_controller) { instance_double(Api::V1::BaseApiController) }
+    before { allow_any_instance_of(Api::V1::BaseApiController).to receive(:current_user).and_return(current_user) }
+    # before { allow(base_api_controller).to receive(:current_user).and_return(current_user) }
+
+    context "自分の作成した記事のレコードを更新しようとするとき" do
+      let(:article) { create(:article, user: current_user) }
+
+      # ①送信した値のみ書き換えられていること
+      it "任意の記事の内容を更新できる" do
+        expect { subject }.to change { article.reload.title }.from(article.title).to(params[:article][:title]) &
+                              change { article.reload.body }.from(article.body).to(params[:article][:body])
+        expect(response).to have_http_status(:ok)
+        # expect { subject }.not_to change { article.body }
+        # expect { subject }.not_to change { article.created_at }
+      end
+    end
+
+    context "自分が作成していない記事のレコードを更新しようとするとき" do
+      let(:other_user) { create(:user) }
+      let!(:article) { create(:article, user: other_user) }
+
+      it "更新できない" do
+        expect { subject }.to raise_error(ActiveRecord::RecordNotFound) &
+                              change { Article.count }.by(0)
       end
     end
   end
