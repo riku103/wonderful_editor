@@ -24,11 +24,11 @@ gem "active_model_serializers", "~> 0.10.0"
 # gem 'bcrypt', '~> 3.1.7'
 
 # トークンベースの認証を行うためのGem
-gem "devise"
+# gem "devise"
 gem "devise_token_auth"
 
 # CORS設定
-gem "rack-cors"
+# gem "rack-cors"
 
 # Use Active Storage variant
 # gem 'image_processing', '~> 1.2'
