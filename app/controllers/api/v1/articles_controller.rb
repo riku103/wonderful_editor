@@ -1,7 +1,6 @@
 class Api::V1::ArticlesController < Api::V1::BaseApiController
-  # 下記の記述で記事を作成できるのは、ログインしているユーザーのみになる
-  # テストの実装では必要ないのでコメントアウト
-  # before_action :authenticate_user!, only: [:create]
+  before_action :login_check, except: [:index, :show]
+  before_action :authenticate_user!, except: [:index, :show]
 
   def index
     articles = Article.order(updated_at: :desc)
@@ -36,5 +35,11 @@ class Api::V1::ArticlesController < Api::V1::BaseApiController
 
     def article_params
       params.require(:article).permit(:title, :body).merge(user_id: current_user.id)
+    end
+
+    def login_check
+      unless user_signed_in?
+        redirect_to root_path
+      end
     end
 end
