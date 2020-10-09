@@ -55,26 +55,30 @@ RSpec.describe "Api::V1::Articles", type: :request do
   end
 
   describe "POST /articles" do
-    subject { post(api_v1_articles_path, params: params) }
+    subject { post(api_v1_articles_path, params: params, headers: headers) }
 
-    let(:base_api_controller) { instance_double(Api::V1::BaseApiController) }
-
-    # スタブを定義する
-    before { allow(base_api_controller).to receive(:current_user).and_return(create(:user)) }
-
-    context "適切なパラメーターを送信した時" do
+    context "ログインしているユーザーが送信した記事なら" do
       let(:params) do
         { article: attributes_for(:article) }
       end
 
+      let(:current_user) { create(:user) }
+      let(:headers) { current_user.create_new_auth_token }
+
       it "記事を作成できる" do
         # ①レコードが一つ作成できること
         expect { subject }.to change { Article.count }.by(1)
+        expect(response).to have_http_status(:ok)
         # ②送ったパラメーターを元にレコードが作成されていること
         res = JSON.parse(response.body)
         expect(res["title"]).to eq params[:article][:title]
         expect(res["body"]).to eq params[:article][:body]
-        expect(response).to have_http_status(:ok)
+
+        # ③ログインしたユーザーが送ったパラメーターか確認する
+        header = response.headers
+        expect(header["access-token"]).to eq headers["access-token"]
+        expect(header["client"]).to eq headers["client"]
+        expect(header["uid"]).to eq headers["uid"]
       end
     end
 
@@ -88,15 +92,14 @@ RSpec.describe "Api::V1::Articles", type: :request do
   end
 
   describe "PUT /articles/:id" do
-    subject { put(api_v1_article_path(article.id), params: params) }
+    subject { put(api_v1_article_path(article.id), params: params, headers: headers) }
 
     let(:params) do
       { article: attributes_for(:article) }
     end
+
     let(:current_user) { create(:user) }
-    # let(:base_api_controller) { instance_double(Api::V1::BaseApiController) }
-    before { allow_any_instance_of(Api::V1::BaseApiController).to receive(:current_user).and_return(current_user) }
-    # before { allow(base_api_controller).to receive(:current_user).and_return(current_user) }
+    let(:headers) { current_user.create_new_auth_token }
 
     context "自分の作成した記事のレコードを更新しようとするとき" do
       let(:article) { create(:article, user: current_user) }
@@ -106,8 +109,6 @@ RSpec.describe "Api::V1::Articles", type: :request do
         expect { subject }.to change { article.reload.title }.from(article.title).to(params[:article][:title]) &
                               change { article.reload.body }.from(article.body).to(params[:article][:body])
         expect(response).to have_http_status(:ok)
-        # expect { subject }.not_to change { article.body }
-        # expect { subject }.not_to change { article.created_at }
       end
     end
 
@@ -123,11 +124,11 @@ RSpec.describe "Api::V1::Articles", type: :request do
   end
 
   describe "DELETE /articles/:id" do
-    subject { delete(api_v1_article_path(article_id)) }
+    subject { delete(api_v1_article_path(article_id), headers: headers) }
 
     let(:current_user) { create(:user) }
+    let(:headers) { current_user.create_new_auth_token }
     let(:article_id) { article.id }
-    before { allow_any_instance_of(Api::V1::BaseApiController).to receive(:current_user).and_return(current_user) }
 
     context "自分の記事を削除しようとするとき" do
       let!(:article) { create(:article, user: current_user) }
