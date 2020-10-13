@@ -35,11 +35,4 @@ RSpec.describe User, type: :model do
     end
   end
 
-  context "既に同じ name が存在している場合" do
-    it "エラーが発生する" do
-      create(:user, name: "riku")
-      user = build(:user, name: "riku")
-      expect(user).not_to be_valid
-    end
-  end
 end
