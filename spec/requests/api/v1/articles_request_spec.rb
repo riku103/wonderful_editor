@@ -4,44 +4,59 @@ RSpec.describe "Api::V1::Articles", type: :request do
   describe "GET /articles" do
     subject { get(api_v1_articles_path) }
 
-    let!(:article1) { create(:article, updated_at: 1.days.ago) }
-    let!(:article2) { create(:article, updated_at: 2.days.ago) }
-    let!(:article3) { create(:article) }
-    it "記事一覧を取得できる" do
-      subject
-      res = JSON.parse(response.body)
+    context "公開状態で作成された記事のみ" do
+      let!(:article1) { create(:article, updated_at: 1.days.ago, status: "published") }
+      let!(:article2) { create(:article, updated_at: 2.days.ago, status: "published") }
+      let!(:article3) { create(:article, status: "published") }
+      let!(:article4) { create(:article) }
 
-      # ①記事一覧が取得できる
-      expect(res.length).to eq 3
-      # ②帰ってきた記事の一覧にbody が含まれていないこと
-      expect(res[0].keys).to eq ["id", "title", "body", "updated_at", "user"]
-      # ③記事が更新順に取得できること
-      expect(res.map {|d| d["id"] }).to eq [article3.id, article1.id, article2.id]
-      # ④ステータスコードが200であること
-      expect(response).to have_http_status(:ok)
-      # ⑤誰が書いた記事が取得できるか
-      expect(res[0]["user"].keys).to eq ["id", "name", "email"]
+      it "記事一覧を取得できる" do
+        subject
+        res = JSON.parse(response.body)
+
+        # ①公開状態で作成された記事一覧だけが取得できる
+        expect(res.length).to eq 3
+        # ②帰ってきた記事の一覧にbody が含まれていないこと
+        expect(res[0].keys).to eq ["id", "title", "updated_at", "status", "user"]
+        # ③記事が更新順に取得できること
+        expect(res.map {|d| d["id"] }).to eq [article3.id, article1.id, article2.id]
+        # ④ステータスコードが200であること
+        expect(response).to have_http_status(:ok)
+        # ⑤誰が書いた記事が取得できるか
+        expect(res[0]["user"].keys).to eq ["id", "name", "email"]
+      end
     end
   end
 
   describe "GET /articles/:id" do
     subject { get(api_v1_article_path(article_id)) }
 
-    context "指定したidの記事が存在する時" do
-      let(:article) { create(:article) }
+    context "指定したid の記事が存在して" do
       let(:article_id) { article.id }
-      it "その記事の詳細が取得できる" do
-        subject
+      context "対象の記事が公開中である時" do
+        let(:article) { create(:article, status: "published") }
 
-        res = JSON.parse(response.body)
+        it "その記事の詳細が取得できる" do
+          subject
 
-        expect(response).to have_http_status(:ok)
-        expect(res["id"]).to eq article.id
-        expect(res["title"]).to eq article.title
-        expect(res["body"]).to eq article.body
-        expect(res["updated_at"]).to be_present
-        expect(res["user_id"]).to eq article.user.id
-        # expect(res["user"].keys).to eq ["id", "name", "email"]
+          res = JSON.parse(response.body)
+
+          expect(response).to have_http_status(:ok)
+          expect(res["id"]).to eq article.id
+          expect(res["title"]).to eq article.title
+          expect(res["body"]).to eq article.body
+          expect(res["status"]).to eq article.status
+          expect(res["updated_at"]).to be_present
+          expect(res["user"]["id"]).to eq article.user.id
+          expect(res["user"].keys).to eq ["id", "name", "email"]
+        end
+      end
+
+      context "対象の記事が下書き状態の時" do
+        let(:article) { create(:article) }
+        it "記事を取得できない" do
+          expect { subject }.to raise_error(ActiveRecord::RecordNotFound)
+        end
       end
     end
 
