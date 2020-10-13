@@ -34,5 +34,4 @@ RSpec.describe User, type: :model do
       expect(user.errors.details[:password][0][:error]).to eq :blank
     end
   end
-
 end
