@@ -4,7 +4,6 @@ RSpec.describe "Api::V1::Articles", type: :request do
   describe "GET /articles" do
     subject { get(api_v1_articles_path) }
 
-    # let!(:user) { create(:user) }
     let!(:article1) { create(:article, updated_at: 1.days.ago) }
     let!(:article2) { create(:article, updated_at: 2.days.ago) }
     let!(:article3) { create(:article) }
@@ -15,7 +14,7 @@ RSpec.describe "Api::V1::Articles", type: :request do
       # ①記事一覧が取得できる
       expect(res.length).to eq 3
       # ②帰ってきた記事の一覧にbody が含まれていないこと
-      expect(res[0].keys).to eq ["id", "title", "updated_at", "user"]
+      expect(res[0].keys).to eq ["id", "title", "body", "updated_at", "user"]
       # ③記事が更新順に取得できること
       expect(res.map {|d| d["id"] }).to eq [article3.id, article1.id, article2.id]
       # ④ステータスコードが200であること
@@ -41,8 +40,8 @@ RSpec.describe "Api::V1::Articles", type: :request do
         expect(res["title"]).to eq article.title
         expect(res["body"]).to eq article.body
         expect(res["updated_at"]).to be_present
-        expect(res["user"]["id"]).to eq article.user.id
-        expect(res["user"].keys).to eq ["id", "name", "email"]
+        expect(res["user_id"]).to eq article.user.id
+        # expect(res["user"].keys).to eq ["id", "name", "email"]
       end
     end
 
@@ -79,14 +78,6 @@ RSpec.describe "Api::V1::Articles", type: :request do
         expect(header["access-token"]).to eq headers["access-token"]
         expect(header["client"]).to eq headers["client"]
         expect(header["uid"]).to eq headers["uid"]
-      end
-    end
-
-    context "不適切なパラメーターを送信した時" do
-      let(:params) { attributes_for(:article) }
-
-      it "エラーする" do
-        expect { subject }.to raise_error(ActionController::ParameterMissing)
       end
     end
   end
