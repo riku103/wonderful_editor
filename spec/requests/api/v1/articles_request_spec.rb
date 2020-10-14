@@ -71,28 +71,52 @@ RSpec.describe "Api::V1::Articles", type: :request do
   describe "POST /articles" do
     subject { post(api_v1_articles_path, params: params, headers: headers) }
 
-    context "ログインしているユーザーが送信した記事なら" do
-      let(:params) do
-        { article: attributes_for(:article) }
-      end
-
+    context "ログインしているユーザーが" do
       let(:current_user) { create(:user) }
       let(:headers) { current_user.create_new_auth_token }
 
-      it "記事を作成できる" do
-        # ①レコードが一つ作成できること
-        expect { subject }.to change { Article.count }.by(1)
-        expect(response).to have_http_status(:ok)
-        # ②送ったパラメーターを元にレコードが作成されていること
-        res = JSON.parse(response.body)
-        expect(res["title"]).to eq params[:article][:title]
-        expect(res["body"]).to eq params[:article][:body]
+      context "下書き状態で送信した記事" do
+        let(:params) do
+          { article: attributes_for(:article, status: "draft") }
+        end
 
-        # ③ログインしたユーザーが送ったパラメーターか確認する
-        header = response.headers
-        expect(header["access-token"]).to eq headers["access-token"]
-        expect(header["client"]).to eq headers["client"]
-        expect(header["uid"]).to eq headers["uid"]
+        it "下書き記事が作成できる" do
+          expect { subject }.to change { Article.count }.by(1)
+          res = JSON.parse(response.body)
+          expect(res["status"]).to eq "draft"
+          expect(response).to have_http_status(:ok)
+        end
+      end
+
+      context "公開状態で送信した記事" do
+        let(:params) do
+          { article: attributes_for(:article, status: "published") }
+        end
+
+        it "記事を作成できる" do
+          # ①レコードが一つ作成できること
+          expect { subject }.to change { Article.where(user_id: current_user.id).count }.by(1)
+          expect(response).to have_http_status(:ok)
+          # ②送ったパラメーターを元にレコードが作成されていること
+          res = JSON.parse(response.body)
+          expect(res["title"]).to eq params[:article][:title]
+          expect(res["body"]).to eq params[:article][:body]
+
+          # ③ログインしたユーザーが送ったパラメーターか確認する
+          header = response.headers
+          expect(header["access-token"]).to eq headers["access-token"]
+          expect(header["client"]).to eq headers["client"]
+          expect(header["uid"]).to eq headers["uid"]
+        end
+      end
+
+      context "でたらめな指定で記事を作成する時" do
+        let(:params) do
+          { article: attributes_for(:article, status: "foo") }
+        end
+        it "エラーになる" do
+          expect { subject }.to raise_error(ArgumentError)
+        end
       end
     end
   end
@@ -101,19 +125,20 @@ RSpec.describe "Api::V1::Articles", type: :request do
     subject { put(api_v1_article_path(article.id), params: params, headers: headers) }
 
     let(:params) do
-      { article: attributes_for(:article) }
+      { article: attributes_for(:article, status: "published") }
     end
 
     let(:current_user) { create(:user) }
     let(:headers) { current_user.create_new_auth_token }
 
-    context "自分の作成した記事のレコードを更新しようとするとき" do
-      let(:article) { create(:article, user: current_user) }
+    context "自分の作成した記事を更新しようとするとき" do
+      let!(:article) { create(:article, status: "draft", user: current_user) }
 
       # ①送信した値のみ書き換えられていること
       it "任意の記事の内容を更新できる" do
         expect { subject }.to change { article.reload.title }.from(article.title).to(params[:article][:title]) &
-                              change { article.reload.body }.from(article.body).to(params[:article][:body])
+                              change { article.reload.body }.from(article.body).to(params[:article][:body]) &
+                              change { article.reload.status }.from(article.status).to(params[:article][:status])
         expect(response).to have_http_status(:ok)
       end
     end
