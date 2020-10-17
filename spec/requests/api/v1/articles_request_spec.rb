@@ -4,13 +4,13 @@ RSpec.describe "Api::V1::Articles", type: :request do
   describe "GET /articles" do
     subject { get(api_v1_articles_path) }
 
-    context "公開状態で作成された記事のみ" do
+    context "公開状態で作成された記事について" do
       let!(:article1) { create(:article, updated_at: 1.days.ago, status: "published") }
       let!(:article2) { create(:article, updated_at: 2.days.ago, status: "published") }
       let!(:article3) { create(:article, status: "published") }
       let!(:article4) { create(:article) }
 
-      it "記事一覧を取得できる" do
+      it "一覧を取得できる" do
         subject
         res = JSON.parse(response.body)
 
